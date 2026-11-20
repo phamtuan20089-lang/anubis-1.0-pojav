@@ -26,6 +26,7 @@ chmod +x gradlew
 ./gradlew --no-daemon tasks --all 2>&1 | grep -i -E "generat|native|lib|jni" | tee -a "$DIAG" | head -40
 
 # 1) Let the project's own tooling generate the JNI C++ glue (it also tries a linux build; failure is fine).
+GEN_START=$(wc -l < "$DIAG")
 log "running ./gradlew :imgui-binding:generateApi"
 ./gradlew --no-daemon :imgui-binding:generateApi >>"$DIAG" 2>&1 && log "generateApi finished" || log "generateApi exited non-zero (continuing)"
 for cmd in ":imgui-binding:generateLibs" "generateLibs"; do
@@ -35,12 +36,24 @@ done
 
 # 2) Locate sources.
 log "locating native sources"
-IMGUI_CORE_DIR="$(dirname "$(find . -name imgui_widgets.cpp -not -path '*/node_modules/*' | head -1)")"
-mapfile -t JNI_FILES < <(grep -rl "JNIEXPORT" --include=*.cpp --include=*.cc . 2>/dev/null)
+if [ -f ./include/imgui/imgui_widgets.cpp ]; then
+  IMGUI_CORE_DIR="./include/imgui"
+else
+  IMGUI_CORE_DIR="$(dirname "$(find . -name imgui_widgets.cpp -not -path '*/example*' -not -path '*/vcpkg*' -not -path '*/node_modules/*' | head -1)")"
+fi
+mapfile -t JNI_FILES < <(grep -rl "JNIEXPORT" --include=*.cpp --include=*.cc --include=*.cxx . 2>/dev/null | grep -v -E "/include/")
 log "imgui core dir: $IMGUI_CORE_DIR"
 log "JNI cpp files: ${#JNI_FILES[@]}"
 if [ -z "$IMGUI_CORE_DIR" ] || [ "${#JNI_FILES[@]}" -lt 5 ]; then
-  log "could not find imgui core or JNI glue; repo layout follows"
+  log "could not find imgui core or JNI glue"
+  log "--- generated/native files found (outside include/) ---"
+  find . -path ./include -prune -o \( -name '*.cpp' -o -name '*.cc' -o -name '*.cxx' -o -name '*.so' -o -name 'build*.xml' -o -name '*.h' \) -print 2>/dev/null | grep -v -E "/\.git/|/\.gradle/" | head -40 | tee -a "$DIAG"
+  log "--- libsNative and src/main/native ---"
+  ls -laR libsNative 2>&1 | head -20 | tee -a "$DIAG"
+  ls -la imgui-binding/src/main/native 2>&1 | head -20 | tee -a "$DIAG"
+  log "--- output of generateApi/generateLibs (without buildSrc noise) ---"
+  sed -n "${GEN_START},\$p" "$DIAG" | grep -v -E "buildSrc|^\s*$" | tail -70
+  log "--- repo layout ---"
   find . -maxdepth 4 -type d | grep -v "\.git" | head -80 | tee -a "$DIAG"
   log "last gradle errors:"; grep -n -i -E "error|failed|what went wrong|not found" "$DIAG" | tail -30
   exit 2
