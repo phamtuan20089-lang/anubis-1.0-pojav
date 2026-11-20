@@ -52,8 +52,7 @@ public final class ImGuiScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float tickDelta) {
         if (!ImGuiManager.getInstance().available()) {
-            graphics.drawCenteredString(this.font, Component.literal("Anubis UI unavailable on this device (ImGui natives missing)"), this.width / 2, this.height / 2 - 10, 0xFFFFFF);
-            graphics.drawCenteredString(this.font, Component.literal("Press ESC to close. See docs/ANDROID.md"), this.width / 2, this.height / 2 + 4, 0xAAAAAA);
+            net.minecraft.client.Minecraft.getInstance().setScreen(new MobileClickGuiScreen());
             return;
         }
 

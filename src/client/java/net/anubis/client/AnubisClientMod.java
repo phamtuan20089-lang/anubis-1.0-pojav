@@ -15,7 +15,9 @@ import net.anubis.client.event.impl.TickEvent;
 import net.anubis.client.gui.BorderlessFullscreen;
 import net.anubis.client.gui.HudLayoutStore;
 import net.anubis.client.gui.HudRenderer;
+import net.anubis.client.gui.GuiLauncher;
 import net.anubis.client.gui.ImGuiScreen;
+import net.anubis.client.gui.MobileMenuButtons;
 import net.anubis.client.gui.LoadingScreens;
 import net.anubis.client.gui.StaffGhost;
 import net.anubis.client.gui.ToggleToasts;
@@ -93,6 +95,7 @@ public final class AnubisClientMod implements ClientModInitializer {
         ModuleConfigStore.getInstance().load();
         OfficialBuild.enforceIfPending();
         OfficialBuildBanner.installVanillaTitleScreen();
+        MobileMenuButtons.register();
         ClientTickEvents.END_CLIENT_TICK.register(client -> OfficialBuild.enforceOnFirstTick());
         AddonManager.configLoaded();
         ClientTickEvents.END_CLIENT_TICK
@@ -101,10 +104,12 @@ public final class AnubisClientMod implements ClientModInitializer {
                     ModuleConfigStore.getInstance().applyPendingEnabled();
 
                     while (openGuiKey.consumeClick()) {
-                        if (client.screen instanceof ImGuiScreen) {
-                            client.setScreen(null);
+                        if (GuiLauncher.isOpen(client.screen)) {
+                            if (!GuiLauncher.capturing(client.screen)) {
+                                client.setScreen(null);
+                            }
                         } else {
-                            client.setScreen(new ImGuiScreen());
+                            client.setScreen(GuiLauncher.create());
                         }
                     }
 
@@ -124,11 +129,11 @@ public final class AnubisClientMod implements ClientModInitializer {
     public static boolean toggleGuiFromKey() {
         Minecraft client = Minecraft.getInstance();
         if (client.screen == null) {
-            client.setScreen(new ImGuiScreen());
+            client.setScreen(GuiLauncher.create());
             return true;
         }
 
-        if (client.screen instanceof ImGuiScreen gui && !gui.capturesKeys()) {
+        if (GuiLauncher.isOpen(client.screen) && !GuiLauncher.capturing(client.screen)) {
             client.setScreen(null);
         }
 

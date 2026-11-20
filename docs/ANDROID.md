@@ -7,7 +7,14 @@
 - The "disable direct state access" mixin now also applies on mobile/translated GL renderers (gl4es, Mali, Adreno, ANGLE, PowerVR).
 - AWT-drawn sky textures (SkyEmoji / SkyLyrics / Peep) turn off if `java.awt` is not usable in the launcher's JRE.
 
-## The remaining hard blocker: ImGui natives
+## Mobile ClickGUI (works without ImGui)
+When ImGui is unavailable, Anubis opens `MobileClickGuiScreen`, built only from vanilla widgets. It drives the same modules and settings, so every module and saved config keeps working.
+- Open it from the **Anubis** button (top-left) on the pause menu or title screen, or with the Anubis GUI key if you map one in the launcher controls.
+- Tap a category, tap a module name to see its settings, tap the ON/OFF pill to toggle. Drag to scroll, drag a slider to change a number.
+- Supported: boolean, mode, number, key, color (tap cycles a preset palette), text (tap to edit), action buttons, module keybind and hold mode.
+- Not available yet: block/item/string list editors, the HUD layout editor and profile/theme screens (shown as "(PC only)" or hidden).
+
+## The remaining hard blocker for the original UI: ImGui natives
 The whole UI (ClickGUI, HUD, toasts) is drawn with imgui-java, and the bundled natives are Windows/Linux/macOS desktop builds only. They cannot load on Android (bionic, aarch64).
 You need an Android arm64 build of the imgui-java 1.90.0 JNI library:
 1. Build it from the imgui-java repository with the Android NDK (aarch64).
