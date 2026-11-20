@@ -13,14 +13,21 @@ log() { echo "[natives] $*" | tee -a "$DIAG"; }
 
 cd "$WORK"
 log "cloning imgui-java $IMGUI_TAG"
-git clone --depth 1 --branch "$IMGUI_TAG" https://github.com/SpaiR/imgui-java.git src >>"$DIAG" 2>&1 || { log "clone failed"; exit 1; }
+git clone --depth 1 --branch "$IMGUI_TAG" --recurse-submodules --shallow-submodules https://github.com/SpaiR/imgui-java.git src >>"$DIAG" 2>&1 || { log "clone failed"; exit 1; }
 cd src
+# imgui, implot, imnodes ... live in git submodules; make sure they are really checked out.
+git submodule update --init --recursive --depth 1 >>"$DIAG" 2>&1 || log "submodule update returned non-zero"
+if [ -z "$(find . -name imgui_widgets.cpp -not -path '*/node_modules/*' | head -1)" ]; then
+  log "imgui_widgets.cpp still missing after submodule checkout"
+fi
 
 log "gradle tasks that look relevant:"
 chmod +x gradlew
 ./gradlew --no-daemon tasks --all 2>&1 | grep -i -E "generat|native|lib|jni" | tee -a "$DIAG" | head -40
 
 # 1) Let the project's own tooling generate the JNI C++ glue (it also tries a linux build; failure is fine).
+log "running ./gradlew :imgui-binding:generateApi"
+./gradlew --no-daemon :imgui-binding:generateApi >>"$DIAG" 2>&1 && log "generateApi finished" || log "generateApi exited non-zero (continuing)"
 for cmd in ":imgui-binding:generateLibs" "generateLibs"; do
   log "running ./gradlew $cmd -Denvs=linux"
   if ./gradlew --no-daemon "$cmd" -Denvs=linux >>"$DIAG" 2>&1; then log "$cmd finished"; break; else log "$cmd exited non-zero (continuing, sources may still be generated)"; fi
@@ -35,6 +42,7 @@ log "JNI cpp files: ${#JNI_FILES[@]}"
 if [ -z "$IMGUI_CORE_DIR" ] || [ "${#JNI_FILES[@]}" -lt 5 ]; then
   log "could not find imgui core or JNI glue; repo layout follows"
   find . -maxdepth 4 -type d | grep -v "\.git" | head -80 | tee -a "$DIAG"
+  log "last gradle errors:"; grep -n -i -E "error|failed|what went wrong|not found" "$DIAG" | tail -30
   exit 2
 fi
 
