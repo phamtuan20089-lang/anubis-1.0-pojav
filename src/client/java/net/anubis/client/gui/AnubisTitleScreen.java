@@ -14,7 +14,7 @@ public final class AnubisTitleScreen extends TitleScreen {
     private final MainMenuRenderer menu = new MainMenuRenderer(this);
 
     public static boolean enabled() {
-        return ThemeStore.get().customMainMenu.get();
+        return ThemeStore.get().customMainMenu.get() && ImGuiManager.getInstance().available();
     }
 
     @Override
@@ -48,6 +48,11 @@ public final class AnubisTitleScreen extends TitleScreen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (!ImGuiManager.getInstance().available()) {
+            net.minecraft.client.Minecraft.getInstance().setScreen(new TitleScreen());
+            return;
+        }
+
         ImGuiManager.getInstance().requestCursor(graphics);
         graphics.renderDeferredElements();
     }

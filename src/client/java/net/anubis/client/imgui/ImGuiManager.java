@@ -286,7 +286,7 @@ public final class ImGuiManager {
 
     /** False when ImGui natives could not be loaded (typical on Android without a custom build). */
     public boolean available() {
-        return !this.failed;
+        return !this.failed && !(Platform.isAndroid() && System.getProperty("imgui.library.path") == null);
     }
 
     public String failureReason() {
@@ -294,7 +294,7 @@ public final class ImGuiManager {
     }
 
     public void renderIfActive() {
-        if (this.failed) {
+        if (!this.available()) {
             return;
         }
 
