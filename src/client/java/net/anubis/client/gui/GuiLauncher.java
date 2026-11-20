@@ -16,13 +16,17 @@ public final class GuiLauncher {
     }
 
     public static boolean isOpen(Screen screen) {
-        return screen instanceof ImGuiScreen || screen instanceof MobileClickGuiScreen;
+        return screen instanceof ImGuiScreen || screen instanceof MobileClickGuiScreen || screen instanceof MobileConfigScreen;
     }
 
     /** True when the open Anubis GUI is busy with text/key input and must not be closed by the GUI key. */
     public static boolean capturing(Screen screen) {
         if (screen instanceof ImGuiScreen gui) {
             return gui.capturesKeys();
+        }
+
+        if (screen instanceof MobileConfigScreen config) {
+            return config.capturesKeys();
         }
 
         return screen instanceof MobileClickGuiScreen mobile && mobile.capturesKeys();

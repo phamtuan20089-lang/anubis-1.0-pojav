@@ -391,7 +391,7 @@ public final class MobileClickGuiScreen extends Screen {
         }
 
         ClientModule hud = this.hudModule();
-        String[] labels = {"CONFIGS", "PROFILE", "HUD", "EMOTES", "SETTINGS"};
+        String[] labels = {"CONFIGS", "PROFILE", "HUD", "SETTINGS"};
         int total = 0;
         int[] ws = new int[labels.length];
         for (int i = 0; i < labels.length; i++) {
@@ -402,8 +402,10 @@ public final class MobileClickGuiScreen extends Screen {
         int x = (this.width - total) / 2;
         int y = this.height - 20;
         for (int i = 0; i < labels.length; i++) {
-            boolean wired = "HUD".equals(labels[i]) && hud != null;
-            this.pill(g, x, y, ws[i], BAR_H, labels[i], wired, wired ? () -> this.openSettings(hud) : null);
+            boolean isHud = "HUD".equals(labels[i]);
+            boolean wired = !isHud || hud != null;
+            Runnable tap = isHud ? () -> this.openSettings(hud) : () -> this.minecraft.setScreen(new MobileConfigScreen());
+            this.pill(g, x, y, ws[i], BAR_H, labels[i], wired, wired ? tap : null);
             x += ws[i] + 4;
         }
     }

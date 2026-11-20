@@ -13,5 +13,3 @@ bin/
 .classpath
 .project
 *.launch
-natives-work/
-out/
