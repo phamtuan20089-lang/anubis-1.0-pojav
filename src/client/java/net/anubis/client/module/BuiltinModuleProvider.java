@@ -10,6 +10,7 @@ import net.anubis.client.module.impl.client.HotkeysModule;
 import net.anubis.client.module.impl.client.HudModule;
 import net.anubis.client.module.impl.client.PerformanceModule;
 import net.anubis.client.module.impl.client.RadarModule;
+import net.anubis.client.module.impl.render.SignalDebugModule;
 import net.anubis.client.module.impl.client.RegionMapModule;
 import net.anubis.client.module.impl.client.SpotifyHudModule;
 import net.anubis.client.module.impl.combat.AimAssistModule;
@@ -279,6 +280,7 @@ public final class BuiltinModuleProvider implements ModuleProvider {
                 new SpotifyHudModule(),
                 new RegionMapModule(),
                 new RadarModule(),
+            new SignalDebugModule(),
                 new HotkeysModule(),
                 new TracersModule(),
                 new PerformanceModule(),
